@@ -4,7 +4,7 @@ from tensorflow.keras import layers
 from tensorflow.keras import Model
 import numpy as np
 
-tf.keras.backend.set_floatx('float64')
+tf.keras.backend.set_floatx('float32')
 
 EPSILON = 1e-16
 
@@ -45,6 +45,22 @@ class Actor(Model):
         log_pi = log_pi_ - tf.reduce_sum(tf.math.log(1 - action**2 + EPSILON), axis=1,
                                          keepdims=True)
 
+        if tf.math.is_nan (action[0]):
+            print(state)
+            print(tf.reduce_sum(state))
+
+            print(tf.reduce_sum(a1))
+            print (tf.reduce_sum (a2))
+            print (tf.reduce_sum (mu))
+            print (tf.reduce_sum (log_sigma))
+            print(tf.reduce_sum(sigma))
+            print (tf.reduce_sum (action_))
+            print (action)
+            print (tf.reduce_sum (log_pi))
+            print(self.trainable_variables)
+            raise Exception("NAN")
+
+
         return action, log_pi
 
     @property
@@ -76,7 +92,7 @@ class Critic(Model):
                 self.dense2_layer.trainable_variables
 
 
-class SoftActorCritic:
+class SoftActorCritic(tf.Module):
 
     def __init__(self, action_dim, writer, epoch_step=1, learning_rate=0.0003,
                  alpha=0.2, gamma=0.99,
@@ -189,6 +205,21 @@ class SoftActorCritic:
         variables = self.policy.trainable_variables
         grads = tape.gradient(actor_loss, variables)
         self.actor_optimizer.apply_gradients(zip(grads, variables))
+
+        if  tf.math.is_nan (tf.reduce_sum([tf.reduce_sum(x) for x in self.policy.trainable_variables])):
+            print(current_states)
+            print(grads)
+            # print(log_pi_a)
+            # print(q1)
+            # print(q2)
+            # print()
+            #
+            print(self.policy.trainable_variables)
+            raise Exception("dsdsdds")
+
+
+
+
 
         with self.writer.as_default():
             for grad, var in zip(grads, variables):
